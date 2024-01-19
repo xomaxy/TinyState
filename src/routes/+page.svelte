@@ -1,9 +1,12 @@
 <script>
     import Graph from "./Graph.svelte";
-    import {csv} from "d3"
+    import {csv, scaleLinear} from "d3"
     let center = {x: undefined, y: undefined}
     let rangeT, rangeP;
     let rawdata;
+    let values = [];
+
+    let min = n => Math.round(n*100)/100
 
     csv("data/A4.csv").then((data)=>{
         let keys = Object.keys(data[0])
@@ -26,7 +29,18 @@
     $: {
         if(center.x != undefined && center.y != undefined && rawdata!= undefined){
             if (center.x >= rangeT.min && center.x <= rangeT.max && center.y >= rangeP.min && center.y <= rangeP.max){
-                console.log("Center is in long range")
+                let bp = rawdata.find(d => d.T >= center.x )
+                let bbp = rawdata[rawdata.indexOf(bp)-1]
+
+                let scales = Object.keys(bp).map( key=>{console.log(key,bbp[key],bp[key]);return scaleLinear([bbp[key],bp[key]])} )
+
+                let normVale = scales[0].invert(center.x)
+                
+                values = scales.map((scale) => scale(normVale))
+
+                
+
+
             }
         }
     }
@@ -50,29 +64,35 @@
 
         <table class="table table-hover border-separate border-spacing-2">
             <thead>
+                
                 <tr>
                     <th>T (K)</th>
                     <th>P (KPa)</th>
-                    <th>S1</th>
-                    <th>S2</th>
-                    <th>EH</th>
-                    <th>EU</th>
-                    <th>ES</th>
+                    <th>H1</th>
+                    <th>H2</th>
+                    <th>U1</th>
+                    <th>U2</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <th>
-                        {Math.round(center.x*100)/100 || 0}
+                        {min(values[0]) || 0}
                     </th>
                     <th>
-                        {Math.round(100*Math.round(center.y*100)/100000)/100 || 0}
+                        {min(values[1]) || 0}
                     </th>
                     <th>
-                        0.0
+                        {min(values[2]) || 0}
                     </th>
                     <th>
-                        0.0
+                        {min(values[3]) || 0}
+                    </th>
+                    <th>
+                        {min(values[4]) || 0}
+                    </th>
+                    <th>
+                        {min(values[5])|| 0}
                     </th>
                 </tr>
             </tbody>
@@ -81,28 +101,40 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>H1</th>
-                    <th>H2</th>
-                    <th>U1</th>
-                    <th>U2</th>
                     <th>Ve1</th>
                     <th>Ve2</th>
+                    <th>S1</th>
+                    <th>S2</th>
+                    <th>EH</th>
+                    <th>EU</th>
+                    <th>ES</th>
                 </tr>
             </thead>
             <tbody>
+          
                 <tr>
                     <th>
-                        0.0
+                        {min(values[6]*100)|| 0}
                     </th>
                     <th>
-                        0.0
+                        {min(values[7])|| 0}
                     </th>
                     <th>
-                        0.0
+                        {min(values[8])|| 0}
                     </th>
                     <th>
-                        0.0
+                        {min(values[9])|| 0}
                     </th>
+                    <th>
+                        {min(values[10])|| 0}
+                    </th>
+                    <th>
+                        {min(values[12])|| 0}
+                    </th>
+                    <th>
+                        {min(values[13])|| 0}
+                    </th>
+                  
                 </tr>
             </tbody>
         </table>
