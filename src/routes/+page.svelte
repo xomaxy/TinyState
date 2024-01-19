@@ -1,7 +1,7 @@
 <script>
     import Graph from "./Graph.svelte";
     import {csv, scaleLinear} from "d3"
-    let center = {x: undefined, y: undefined}
+    let center = {x: 0, y: 0}
     let rangeT, rangeP;
     let rawdata;
     let values = [];
@@ -59,8 +59,8 @@
         <span>
             Coordinate Input
         </span>
-        <input type="text" name="" id="" placeholder="x-coordinate" class="input p-2 boder-1" value={center.x || ""}/>
-        <input type="text" name="" id="" placeholder="y-coordinate" class="input p-2" value={center.y || ""}/>
+        <input type="text" name="" id="" placeholder="x-coordinate" class="input p-2 boder-1" bind:value={center.x }/>
+        <input type="text" name="" id="" placeholder="y-coordinate" class="input p-2" bind:value={center.y }/>
 
         <table class="table table-hover border-separate border-spacing-2">
             <thead>
