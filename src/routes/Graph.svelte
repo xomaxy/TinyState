@@ -16,7 +16,7 @@
     import Path from "$D3/Path.svelte"
     import Circle from "$D3/Circle.svelte"
 
-    csv("/data/A4.csv").then((data)=>{
+    csv("data/A4.csv").then((data)=>{
         let keys = Object.keys(data[0])
         let ranges = keys.map((key) => {
             
