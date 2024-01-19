@@ -40,7 +40,7 @@
     })
 
     
-    let axis = [{type: "x", label:"Temperatura", id:"S1" , domain:undefined},
+    let axis = [{type: "x", label:"Temperatura", id:"T" , domain:undefined},
                 {type: "y", label:"Presión", id:"P", domain:undefined}];
 
     let rawData = [];
@@ -57,7 +57,7 @@
 </script>
 
 
-<D3 className=" border-4 border-r-4 flex-initial">
+<D3 className="">
     {#each axis as a}
         <Axis type="{a.type}" domain={{[`${a.type}`]: a.domain || [0,1]}} />
     {/each}

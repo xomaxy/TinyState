@@ -26,7 +26,7 @@
             </svelte:fragment>
         </AppBar>
     </svelte:fragment>
-    <div class="my-10">
+    <div class=" flex flex-col items-center m-10">
         <slot />
     </div>
 </AppShell>   
