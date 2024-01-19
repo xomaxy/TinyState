@@ -45,7 +45,7 @@
 
     let rawData = [];
 
-    let center = {x:undefined, y:undefined}
+    export let center = {x:undefined, y:undefined}
 
     onMount(() => {
         select(svg).on("click",(e)=>{  
@@ -56,11 +56,8 @@
 
 </script>
 
-<h1 class="text-5xl">
-    Digital Phase
-</h1>
 
-<D3 className="w-[500px] border-4 border-r-4 ">
+<D3 className=" border-4 border-r-4 flex-initial">
     {#each axis as a}
         <Axis type="{a.type}" domain={{[`${a.type}`]: a.domain || [0,1]}} />
     {/each}
@@ -68,8 +65,7 @@
     <Circle {center}/>
 </D3>
 
-<input type="text" name="" id="" placeholder="x-coordinate" class="input p-2 boder-1 w-20">
-<input type="text" name="" id="" placeholder="y-coordinate" class="input p-2">
+
 
 
 
