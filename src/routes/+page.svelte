@@ -1,3 +1,6 @@
-<h1 class="">
-    Example
-</h1>
+<script>
+    import Graph from "./Graph.svelte";
+
+</script>
+
+<Graph/>

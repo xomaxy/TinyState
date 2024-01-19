@@ -9,6 +9,10 @@ const config = {
 			paths: {
 				base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
 			},
+			alias: {
+				$D3: "src/lib/d3",
+				$data: "src/data",
+			},
 		},
 	preprocess: vitePreprocess()
 };
