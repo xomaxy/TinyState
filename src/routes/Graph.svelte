@@ -16,7 +16,16 @@
     import Path from "$D3/Path.svelte"
     import Circle from "$D3/Circle.svelte"
 
+    let rawData = [];
+
+    let axis = [{type: "x", label:"Temperatura", id:"T" , domain:undefined},
+                {type: "y", label:"Presión", id:"P", domain:undefined}];
+
+    export {axis as axis}
+    export {rawData as data}
+
     csv("data/A4.csv").then((data)=>{
+        console.log(data)
         let keys = Object.keys(data[0])
         let ranges = keys.map((key) => {
             
@@ -38,12 +47,6 @@
         rawData = zip(...axis.map(a=>data.map(d=>d[a.id])))
         
     })
-
-    
-    let axis = [{type: "x", label:"Temperatura", id:"T" , domain:undefined},
-                {type: "y", label:"Presión", id:"P", domain:undefined}];
-
-    let rawData = [];
 
     export let center = {x:undefined, y:undefined}
 

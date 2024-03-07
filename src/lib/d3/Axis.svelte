@@ -15,6 +15,7 @@
     $: _domain.update(($_domain)=>{return {...$_domain, ...domain}})
     
     $: if((type === 'x') && transition ){ select(axis).transition().duration(duration).call(axisBottom($xScale))} else if (type === 'x') {select(axis).call(axisBottom($xScale))}
+
     $: if((type === 'y') && transition ){ select(axis).transition().duration(duration).call(axisLeft($yScale))} else if (type === 'y') {select(axis).call(axisLeft($yScale)); console.log("y has changed")}
    
 //    $: if((type === 'y') && transition ){ select(axis).transition().duration(duration).attr("transform", `translate(${$xScale(Math.min(...$domain.x))},0)`).call(axisLeft($yScale))} else if (type === 'y') {select(axis).call(axisLeft($yScale)); console.log("y has changed")}

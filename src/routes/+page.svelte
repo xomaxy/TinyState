@@ -1,12 +1,22 @@
 <script>
     import Graph from "./Graph.svelte";
     import {csv, scaleLinear} from "d3"
+    import { Slice } from "lucide-svelte";
+    import numbro from "numbro"
+
+    function showNumber(n) {
+        return numbro(n).format({thousandSeparated: true, mantissa: 3})
+    }
+
     let center = {x: 0, y: 0}
-    let rangeT, rangeP;
-    let rawdata;
+    
     let values = [];
 
-    let min = n => Math.round(n*100)/100
+
+    // Mutable data
+    let rangeT, rangeP;
+    let rawdata;
+
 
     csv("data/A4.csv").then((data)=>{
         let keys = Object.keys(data[0])
@@ -18,6 +28,8 @@
                 }
             
         })
+
+        console.log("I am ranges",ranges)
 
         rangeT = ranges[0]
         rangeP = ranges[1]
@@ -37,9 +49,6 @@
                 let normVale = scales[0].invert(center.x)
                 
                 values = scales.map((scale) => scale(normVale))
-
-                
-
 
             }
         }
@@ -66,8 +75,8 @@
             <thead>
                 
                 <tr>
-                    <th>T (K)</th>
-                    <th>P (KPa)</th>
+                    <th>T </th>
+                    <th>P </th>
                     <th>H1</th>
                     <th>H2</th>
                     <th>U1</th>
@@ -76,24 +85,11 @@
             </thead>
             <tbody>
                 <tr>
-                    <th>
-                        {min(values[0]) || 0}
-                    </th>
-                    <th>
-                        {min(values[1]) || 0}
-                    </th>
-                    <th>
-                        {min(values[2]) || 0}
-                    </th>
-                    <th>
-                        {min(values[3]) || 0}
-                    </th>
-                    <th>
-                        {min(values[4]) || 0}
-                    </th>
-                    <th>
-                        {min(values[5])|| 0}
-                    </th>
+                    {#each values.slice(0,6) as value}
+                        <th>
+                            {showNumber(value)}
+                        </th>
+                    {/each}
                 </tr>
             </tbody>
         </table>
@@ -111,30 +107,12 @@
                 </tr>
             </thead>
             <tbody>
-          
                 <tr>
+                    {#each values.slice(6,-1) as value}
                     <th>
-                        {min(values[6]*100)|| 0}
+                        {showNumber(value)}
                     </th>
-                    <th>
-                        {min(values[7])|| 0}
-                    </th>
-                    <th>
-                        {min(values[8])|| 0}
-                    </th>
-                    <th>
-                        {min(values[9])|| 0}
-                    </th>
-                    <th>
-                        {min(values[10])|| 0}
-                    </th>
-                    <th>
-                        {min(values[12])|| 0}
-                    </th>
-                    <th>
-                        {min(values[13])|| 0}
-                    </th>
-                  
+                    {/each}
                 </tr>
             </tbody>
         </table>
