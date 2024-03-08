@@ -135,9 +135,12 @@ function distanceToLine(C, [A, B]) {
                     Y:
                     [
                         rawData.find(point => Number(point[axisY.id]) >= center.y ),
-                        rawData[rawData.indexOf(
-                            rawData.find(point => Number(point[axisY.id]) >= center.y )
-                        )-1]
+                        rawData
+                        [
+                            rawData.indexOf(
+                                rawData.find(point => Number(point[axisY.id]) >= center.y )
+                            )-1
+                        ] || rawData[0]
                     ]
                 }
 
@@ -222,6 +225,8 @@ function distanceToLine(C, [A, B]) {
 
                 console.log("Is close?",isCloseToCurve)
 
+            } else {
+                center = {x:0,y:0}
             }
         }
     }
