@@ -1,319 +1,228 @@
 <script>
-    import Graph from "./Graph.svelte";
-    import {csv, interval, scaleLinear} from "d3"
-    import { Slice } from "lucide-svelte";
-
-    import numbro from "numbro"
+    import Hope from "./Hope.svelte"
+    import { TabGroup, Tab, TabAnchor } from '@skeletonlabs/skeleton';
+    import {csv, scaleLinear, dsv, interpolate} from "d3";
 
 
-    function zip() {
-        let args = [].slice.call(arguments);
-        let shortest = args.length==0 ? [] : args.reduce(function(a,b){
-            return a.length<b.length ? a : b
-        });
+    let tabSet = 0;
+    let dataA6, dataA7, underPreasure,underThermo,guessThermo;
+    let state = "Liquid"
+    let thermovar = "T"
+    let interval;
 
-        return shortest.map(function(_,i){
-            return args.map(function(array){return array[i]})
-        });
-    }
-
-    function showNumber(n) {
-        return numbro(n).format({thousandSeparated: true, mantissa: 3})
-    }
-
-    function isIn(number, range) {
+function isIn(number, range) {
   const [min, max] = range[0] < range[1] ? range : [range[1], range[0]];
   return number >= min && number <= max;
 }
 
-function distanceToLine(C, [A, B]) {
-  // Check if A and B are the same point
-  if (A[0] === B[0] && A[1] === B[1]) {
-    // Calculate and return the Euclidean distance between C and A
-    return 0;
-  }
+// Load data with magic 
 
-  // Destructuring the points for readability
-  const [x1, y1] = A;
-  const [x2, y2] = B;
-  const [x0, y0] = C;
+dsv(";","data/A6.csv").then((data)=>{
 
-  // Calculate the distance from C to the line defined by A and B
-  return Math.abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
+
+const reorganizedData = data.reduce((acc, item) => {
+Object.keys(item).forEach(key => {
+    const [letter, value] = key.split('_');
+    const valNum = parseFloat(value);
+    if (!acc[valNum]) {
+    acc[valNum] = {};
+    }
+    if (!acc[valNum][letter]) {
+    acc[valNum][letter] = [];
+    }
+    acc[valNum][letter].push(item[key]);
+});
+return acc;
+}, {});
+
+console.log("Casting")
+
+dataA6 = reorganizedData
+
+
+})
+
+dsv(";","data/A7.csv").then((data)=>{
+
+
+const reorganizedData = data.reduce((acc, item) => {
+Object.keys(item).forEach(key => {
+const [letter, value] = key.split('_');
+const valNum = parseFloat(value);
+if (!acc[valNum]) {
+acc[valNum] = {};
+}
+if (!acc[valNum][letter]) {
+acc[valNum][letter] = [];
+}
+acc[valNum][letter].push(item[key]);
+});
+return acc;
+}, {});
+
+dataA7 = reorganizedData
+
+
+})
+
+
+
+function calculateState(state, underThermo){
+    let data = state == "Liquid" ? dataA6: dataA7
+    console.log(dataA6, dataA7)
+    let keys =  Object.keys(data).map( text => Number(text)).sort((a,b) => a-b)
+    console.log("Preasure values are",keys)
+    let tonum = Number(underPreasure)
+    let numunderThermo = Number(underThermo)
+
+// range control
+        if (tonum < keys[0] || tonum > keys[keys.length-1])  {
+            console.log("Out of range")
+    
+        } else if (tonum == keys[0]) {
+            console.log("Low tip")
+
+        } else if (tonum == keys[keys.length]){
+            console.log("High tip")
+
+        } else {
+            interval = {
+                preasure: {
+                    low:keys[keys.indexOf(keys.find( presure => Number(presure) >= Number(underPreasure)))-1] ,
+                    high:keys.find( presure => Number(presure) >= Number(underPreasure)),
+                    percentaje: (tonum - keys.find( presure => Number(presure) >= Number(underPreasure))) / (keys[keys.indexOf(keys.find( presure => Number(presure) >= Number(underPreasure)))-1] - keys.find( presure => Number(presure) >= Number(underPreasure)))
+
+                },
+
+            }
+
+            interval.thermodata = {
+                thermo_low: data[`${interval.preasure.low}`],
+                thermo_high: data[`${interval.preasure.high}`]
+
+            }
+
+            interval.thermodata.interpolate = {
+                guess: (() => {
+                    let guess = {}
+                    Object.keys(interval.thermodata.thermo_low).forEach( 
+                        thermoProp => {
+                        guess[thermoProp] = interval.thermodata.thermo_low[thermoProp].map((lowval, index) => {
+                            try{
+                                return Number(lowval) + (Number(interval.thermodata.thermo_high[thermoProp][index])-Number(lowval))*interval.preasure.percentaje
+                            }
+                            catch(e){
+                                return 0
+                            }
+                            
+                        }
+                        )
+                    })
+                    return guess
+                })()
+            }
+
+
+            
+            if(underThermo !== undefined && thermovar !== undefined && interval !== undefined){
+                // SI ESTA ADENTRO
+               if (isIn(numunderThermo, [
+                    Math.max(...interval.thermodata.interpolate.guess[thermovar]),
+                    Math.min(...interval.thermodata.interpolate.guess[thermovar])
+                                ]))
+                {
+                    console.log("is inside")
+                    
+                    let high =interval.thermodata.interpolate.guess[thermovar].find(val => val > numunderThermo)
+                    let low = interval.thermodata.interpolate.guess[thermovar][interval.thermodata.interpolate.guess[thermovar].indexOf(high) -1]
+
+                    console.log(low)
+                    console.log(high)
+                    guessThermo = "Just in case i will fill this with this text hi mom"
+
+                } else {
+                    console.log("is outside")
+                }
+            }
+        }
+
+       
+
+
+    
 }
 
 
-    let center = {x: 0, y: 0}
+$: {if (dataA6 !== undefined && dataA7 !== undefined && underPreasure !== undefined) {
     
-    let values = {x:[],y:[]};
-
-    let axis = [{type: "x", label:"Temperatura", id:"T" , domain:undefined},
-                {type: "y", label:"Presión", id:"P", domain:undefined}];
-
-
-    // Mutable data
-    let axisX, axisY;
-    let rawData;
-    let keys;
-    let plotedData;
-    let isCloseToCurve;
-
-    /*csv("data/A4.csv").then((data)=>{
-        let keys = Object.keys(data[0])
-        let ranges = keys.map((key) => {
-            
-            return {key, 
-                    min: Math.min(...data.map((d)=>d[key])),
-                    max: Math.max(...data.map((d)=>d[key]))
-                }
-            
-        })
-
-        console.log("I am ranges",ranges)
-
-        rangeT = ranges[0]
-        rangeP = ranges[1]
-
-        rawData = data
-    })*/
-
-    csv("data/A4.csv").then((data)=>{
-        console.log("Fetching data, this is also the raw data",data)
-        keys = Object.keys(data[0])
-        console.log("The keys are",keys)
-        let ranges = keys.map((key) => {
-            
-            return {key, 
-                    min: Math.min(...data.map((d)=>d[key])),
-                    max: Math.max(...data.map((d)=>d[key]))
-                }
-            
-        })
-
-        console.log("The object with ranges is",ranges)
-    
-        axis = axis.map( a =>{
-            let range = ranges.find(r => r.key === a.id)
-            return {...a, domain:[range.min, range.max]}
-            
-        })
-
-        console.log("The axis are",axis)
-
-        axisX = axis.find(a => a.type === "x")
-        axisY = axis.find(a => a.type === "y")
-
-
-        rawData = data
-
-        plotedData = rawData.map((d) => {
-
-            return [d[axisX.id], d[axisY.id]]
-
-        })
-        
-    })
-
-    
-
-
-    $: {
-        if(center.x != undefined && center.y != undefined && rawData!= undefined){
-            if (isIn(center.x, axisX.domain) && isIn(center.y, axisY.domain)){
-
-
-                
-                let intervalPoint = {
-                    X: 
-                    [
-                        rawData.find(point => Number(point[axisX.id]) >= center.x ),
-                        rawData[rawData.indexOf(
-                            rawData.find(point => Number(point[axisX.id]) >= center.x )
-                        )-1]
-                    ]
-                    ,
-                    Y:
-                    [
-                        rawData.find(point => Number(point[axisY.id]) >= center.y ),
-                        rawData
-                        [
-                            rawData.indexOf(
-                                rawData.find(point => Number(point[axisY.id]) >= center.y )
-                            )-1
-                        ] || rawData[0]
-                    ]
-                }
-
-
-                console.log("The interval point is",intervalPoint)    
-
-
-
-                let scales = keys.map( key => {
-                    return {
-                        [`${key}`]: {
-                            X: scaleLinear([intervalPoint.X[1][axisX.id],[intervalPoint.X[0][axisX.id]]],
-                                            [intervalPoint.X[1][key],intervalPoint.X[0][key]]),
-
-                            Y: scaleLinear([intervalPoint.Y[1][axisY.id],[intervalPoint.Y[0][axisY.id]]],
-                                            [intervalPoint.Y[1][key],intervalPoint.Y[0][key]]),
-
-                        } 
-                }
-            })
-
-                console.log("The scales are",scales)
-
-                //let normVale = scales[0].invert(center.x)
-
-                let interValue = {
-                    interpolatebyX : scales.map(
-                        (scale) => {
-                            return {
-                                    variable: `${Object.keys(scale)[0]}`,
-                                    guess: scale[`${Object.keys(scale)[0]}`].X(center.x)
-                                }
-                    }),
-                    interpolatebyY : scales.map(
-                        (scale) => {
-                            return {
-                                    variable: `${Object.keys(scale)[0]}`,
-                                    guess: scale[`${Object.keys(scale)[0]}`].Y(center.y)
-                                }
-                            }
-                    )
-                }
-                
-                console.log("The interval value is",interValue)
-                
-
-                plotedData = rawData.map((d) => {
-
-                    return [d[axisX.id], d[axisY.id]]
-                    
-                })
-
-                if("values" === "values"){
-                    values.x = interValue.interpolatebyX
-                    values.y = interValue.interpolatebyY
-                }
-
-                let distance = distanceToLine([center.x,center.y],[
-                    [
-                    (
-                        Number(intervalPoint.X[0][axisX.id])+
-                        Number(intervalPoint.X[1][axisX.id])
-                    )/2,
-                    (
-                        Number(intervalPoint.X[0][axisY.id])+
-                        Number(intervalPoint.X[1][axisY.id])
-                    )/2
-                    ],
-                    [
-                    (
-                        Number(intervalPoint.Y[0][axisX.id])+
-                        Number(intervalPoint.Y[1][axisX.id])
-                    )/2,
-                    (
-                        Number(intervalPoint.Y[0][axisY.id])+
-                        Number(intervalPoint.Y[1][axisY.id])
-                    )/2
-                    ]
-                ])
-
-                isCloseToCurve = distance < 10
-
-                console.log("Is close?",isCloseToCurve)
-
-            } else {
-                center = {x:0,y:0}
-            }
-        }
-    }
-
-
+    calculateState(state,underThermo)
+}}
 
 </script>
 
 
 
-<div class="flex flex-row gap-10 items-center flex-nowrap ">
-    
-        <div class="  w-[700px] ">
-            <Graph 
-             data={plotedData}
-             axis={axis}
-             bind:center={center}/>        
-        </div>
-    
-    <div class="flex flex-col gap-5">
-        <span>
-            Coordinate Input
+<TabGroup>
+	<Tab bind:group={tabSet} name="tab1" value={0}>
+		<span>
+            Vapor - Liquid Mixture
         </span>
-        <input type="text" name="" id="" placeholder="x-coordinate" class="input p-2 boder-1" bind:value={center.x }/>
-        <input type="text" name="" id="" placeholder="y-coordinate" class="input p-2" bind:value={center.y }/>
+	</Tab>
+	<Tab bind:group={tabSet} name="tab2" value={1}>
+        <span>
+            Vapor - Liquid State
+        </span>
+    </Tab>
 
-        {#if isCloseToCurve}
+	<!-- Tab Panels --->
+	<svelte:fragment slot="panel">
+		{#if tabSet === 0}
+        <Hope/>
+		{:else if tabSet === 1}
+        <span>
+            Input Pressure
+        </span>
+        <input type="text" name="" id=""  class="input p-2 boder-1 basis-3/4" bind:value={underPreasure} />
+        <select class="select" bind:value={state} >
+            <option>Liquid</option>
+            <option>Gas</option>
+        </select>
+
+        <select class="select" bind:value={thermovar} >
+            <option>T</option>
+            <option>V</option>
+            <option>U</option>
+            <option>H</option>
+            <option>S</option>
+        </select>
+        <input type="text" name="" id=""  class="input p-2 boder-1 basis-3/4" bind:value={underThermo} />
+
+
         <table class="table table-hover border-separate border-spacing-2">
             <thead>
                 <tr>
-                    {#each values.x.slice(0,6) as value}
-                        <th>
-                            {value.variable}
-                        </th>
-                    {/each}
+                    <th>Property</th>
+                    <th>Value</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    {#each values.x.slice(0,6) as value}
-                        <th>
-                            {showNumber(value.guess)}
-                        </th>
-                    {/each}
-                </tr>
-                <tr>
-                    {#each values.y.slice(0,6) as value}
-                        <th>
-                            {showNumber(value.guess)}
-                        </th>
-                    {/each}
-                </tr>
+
+                {#if interval != undefined}
+                {#each Object.entries(interval.thermodata.interpolate.guess) as [prop, value]}
+                    <tr>
+                        <th>{prop}</th>
+                        <th>{value}</th>
+                    </tr>
+ 
+                {/each}
+                {/if}
                 
             </tbody>
         </table>
 
-        <table class="table table-hover border-separate border-spacing-2">
-            <thead>
-                <tr>
-                    {#each values.x.slice(6,12) as value}
-                    <th>
-                        {value.variable}
-                    </th>
-                    {/each}
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    {#each values.x.slice(6,12) as value}
-                    <th>
-                        {showNumber(value.guess)}
-                    </th>
-                    {/each}
-                </tr>
-                <tr>
-                    {#each values.y.slice(6,12) as value}
-                    <th>
-                        {showNumber(value.guess)}
-                    </th>
-                    {/each}
-                </tr>
-            </tbody>
-        </table>
-        {/if}
+		{/if}
+	</svelte:fragment>
+</TabGroup>
+			
 
-        
-    </div>
-    
 
-</div>
