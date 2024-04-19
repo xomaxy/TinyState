@@ -133,12 +133,32 @@ function calculateState(state, underThermo){
                 {
                     console.log("is inside")
                     
+                    
                     let high =interval.thermodata.interpolate.guess[thermovar].find(val => val > numunderThermo)
-                    let low = interval.thermodata.interpolate.guess[thermovar][interval.thermodata.interpolate.guess[thermovar].indexOf(high) -1]
+                    let low = interval.thermodata.interpolate.guess[thermovar][interval.thermodata.interpolate.guess[thermovar].indexOf(high) -1] || 0
+                    let index = interval.thermodata.interpolate.guess[thermovar].indexOf(high)
+                    console.log(index)
+                    console.log(index-1)
+                    guessThermo = numunderThermo/(Number(high)-Number(low)) 
 
-                    console.log(low)
-                    console.log(high)
-                    guessThermo = "Just in case i will fill this with this text hi mom"
+                    let lows = {}
+
+                    for (const [key,value] of Object.entries(interval.thermodata.interpolate.guess)){
+
+                        if(thermovar == key){
+                            lows[thermovar] = (value[index] - value[index-1])*guessThermo
+                        } else {
+                            lows[key] = (value[index] - value[index-1])*guessThermo  + value[index-1]
+                        }
+                        
+
+                    }
+
+                    console.log("Lows are", lows)
+
+                    interval.thermodata.interpolate.lows = lows
+
+
 
                 } else {
                     console.log("is outside")
@@ -179,46 +199,51 @@ $: {if (dataA6 !== undefined && dataA7 !== undefined && underPreasure !== undefi
 		{#if tabSet === 0}
         <Hope/>
 		{:else if tabSet === 1}
-        <span>
-            Input Pressure
-        </span>
-        <input type="text" name="" id=""  class="input p-2 boder-1 basis-3/4" bind:value={underPreasure} />
-        <select class="select" bind:value={state} >
-            <option>Liquid</option>
-            <option>Gas</option>
-        </select>
+        <div class="flex flex-col gap-5">
 
-        <select class="select" bind:value={thermovar} >
-            <option>T</option>
-            <option>V</option>
-            <option>U</option>
-            <option>H</option>
-            <option>S</option>
-        </select>
-        <input type="text" name="" id=""  class="input p-2 boder-1 basis-3/4" bind:value={underThermo} />
-
-
-        <table class="table table-hover border-separate border-spacing-2">
-            <thead>
-                <tr>
-                    <th>Property</th>
-                    <th>Value</th>
-                </tr>
-            </thead>
-            <tbody>
-
-                {#if interval != undefined}
-                {#each Object.entries(interval.thermodata.interpolate.guess) as [prop, value]}
+            <span>
+                Input Pressure
+            </span>
+            <input type="text" name="" id=""  class="input p-2 boder-1 basis-3/4" bind:value={underPreasure} />
+            <select class="select" bind:value={state} >
+                <option>Liquid</option>
+                <option>Gas</option>
+            </select>
+    
+            <select class="select" bind:value={thermovar} >
+                <option>T</option>
+                <option>V</option>
+                <option>U</option>
+                <option>H</option>
+                <option>S</option>
+            </select>
+            <input type="text" name="" id=""  class="input p-2 boder-1 basis-3/4" bind:value={underThermo} />
+    
+    
+            <table class="table table-hover border-separate border-spacing-2">
+                <thead>
                     <tr>
-                        <th>{prop}</th>
-                        <th>{value}</th>
+                        <th>Property</th>
+                        <th>Value</th>
                     </tr>
- 
-                {/each}
-                {/if}
-                
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+    
+                    {#if interval != undefined && underThermo != undefined}
+                    {#each Object.entries(interval.thermodata.interpolate.lows) as [prop, value]}
+                        <tr>
+                            <th>{prop}</th>
+                            <th>{value}</th>
+                        </tr>
+     
+                    {/each}
+                    {:else}
+                        Out of Range
+                    {/if}
+                    
+                </tbody>
+            </table>
+        </div>
 
 		{/if}
 	</svelte:fragment>
