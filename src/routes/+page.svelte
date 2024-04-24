@@ -3,11 +3,19 @@
     import { TabGroup, Tab, TabAnchor } from '@skeletonlabs/skeleton';
     import {csv, scaleLinear, dsv, interpolate} from "d3";
 
+    let units = {
+        T: "C",
+        P: "MPa",
+        H: "kJ/kg",
+        U: "kJ/kg",
+        S: "kJ/kgK",
+        V: "m^3/kg"
+    }
 
     let tabSet = 0;
     let dataA6, dataA7, underPreasure,underThermo,guessThermo;
     let state = "Liquid"
-    let thermovar = "T"
+    let thermovar = "T [C]"
     let interval;
 
 function isIn(number, range) {
@@ -127,16 +135,16 @@ function calculateState(state, underThermo){
             if(underThermo !== undefined && thermovar !== undefined && interval !== undefined){
                 // SI ESTA ADENTRO
                if (isIn(numunderThermo, [
-                    Math.max(...interval.thermodata.interpolate.guess[thermovar]),
-                    Math.min(...interval.thermodata.interpolate.guess[thermovar])
+                    Math.max(...interval.thermodata.interpolate.guess[thermovar.slice(0,1)]),
+                    Math.min(...interval.thermodata.interpolate.guess[thermovar.slice(0,1)])
                                 ]))
                 {
                     console.log("is inside")
                     
                     
-                    let high =interval.thermodata.interpolate.guess[thermovar].find(val => val > numunderThermo)
-                    let low = interval.thermodata.interpolate.guess[thermovar][interval.thermodata.interpolate.guess[thermovar].indexOf(high) -1] || 0
-                    let index = interval.thermodata.interpolate.guess[thermovar].indexOf(high)
+                    let high =interval.thermodata.interpolate.guess[thermovar.slice(0,1)].find(val => val > numunderThermo)
+                    let low = interval.thermodata.interpolate.guess[thermovar.slice(0,1)][interval.thermodata.interpolate.guess[thermovar].indexOf(high) -1] || 0
+                    let index = interval.thermodata.interpolate.guess[thermovar.slice(0,1)].indexOf(high)
                     console.log(index)
                     console.log(index-1)
                     guessThermo = numunderThermo/(Number(high)-Number(low)) 
@@ -202,20 +210,23 @@ $: {if (dataA6 !== undefined && dataA7 !== undefined && underPreasure !== undefi
         <div class="flex flex-col gap-5">
 
             <span>
-                Input Pressure
+                Input Pressure [MPa]
             </span>
             <input type="text" name="" id=""  class="input p-2 boder-1 basis-3/4" bind:value={underPreasure} />
             <select class="select" bind:value={state} >
                 <option>Liquid</option>
                 <option>Gas</option>
             </select>
-    
+            
+            <span>
+                Select Main Interpolator
+            </span>
             <select class="select" bind:value={thermovar} >
-                <option>T</option>
-                <option>V</option>
-                <option>U</option>
-                <option>H</option>
-                <option>S</option>
+                <option>T {'['+units['T']+']'}</option>
+                <option>V {'['+units['V']+']'}</option>
+                <option>U {'['+units['U']+']'}</option>
+                <option>H {'['+units['H']+']'}</option>
+                <option>S {'['+units['S']+']'}</option>
             </select>
             <input type="text" name="" id=""  class="input p-2 boder-1 basis-3/4" bind:value={underThermo} />
     
@@ -229,7 +240,10 @@ $: {if (dataA6 !== undefined && dataA7 !== undefined && underPreasure !== undefi
                 </thead>
                 <tbody>
     
-                    {#if interval != undefined && underThermo != undefined}
+                    {#if interval != undefined 
+                        && underThermo != undefined
+                        && interval.thermodata.interpolate.lows != undefined
+                    }
                     {#each Object.entries(interval.thermodata.interpolate.lows) as [prop, value]}
                         <tr>
                             <th>{prop}</th>
@@ -238,7 +252,7 @@ $: {if (dataA6 !== undefined && dataA7 !== undefined && underPreasure !== undefi
      
                     {/each}
                     {:else}
-                        Out of Range
+                        There is no data for this input
                     {/if}
                     
                 </tbody>
