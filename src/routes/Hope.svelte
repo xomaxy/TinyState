@@ -47,6 +47,7 @@ function distanceToLine(C, [A, B]) {
   return Math.abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
 }
 
+
     // Variables for components
     let tabSet = 0 
 
@@ -62,6 +63,18 @@ function distanceToLine(C, [A, B]) {
                 {type: "y", label:"Presión", id:"P", domain:undefined}];
 
     let quality = 0.5
+
+    let units = {
+        T: "C",
+        P: "KPa",
+        H: "kJ/kg",
+        U: "kJ/kg",
+        S: "kJ/kgK",
+        Ve: "m^3/kg",
+        EH: "kJ/kg",
+        EU: "kJ/kg",
+        ES: "kJ/kgK",
+    }
 
     // Mutable data
     let axisX, axisY;
@@ -411,11 +424,11 @@ function distanceToLine(C, [A, B]) {
         </span>
         <div>
             <span>
-
             {#if axisX != undefined}
             <select class="select" bind:value={axis[0].id} on:change={()=>{updateRanges(); updateData();}} >
+                {console.log("key", keys)}
                 {#each keys as key}
-                <option value={key} >{key}</option>
+                <option value={key} >{key+" ["+units[key.replace(/[0-9]/g, "")]+']'}</option>
                 {/each}
             </select>
             {/if}
@@ -427,8 +440,8 @@ function distanceToLine(C, [A, B]) {
             <span>
                 {#if axisY != undefined}
                 <select class="select" bind:value={axis[1].id} on:change={()=>{updateRanges(); updateData();}} >
-                    {#each keys as key}
-                    <option value={key} >{key}</option>
+                    {#each keys.slice(0,2) as key}
+                    <option value={key} >{key+" ["+units[key.replace(/[0-9]/g, "")]+']'}</option>
                     {/each}
                 </select>
                 {/if}

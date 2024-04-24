@@ -170,7 +170,7 @@ $: {if (dataA6 !== undefined && dataA7 !== undefined && underPreasure !== undefi
 	</Tab>
 	<Tab bind:group={tabSet} name="tab2" value={1}>
         <span>
-            Vapor - Liquid State
+            Saturated Vapor and Compressed liquid
         </span>
     </Tab>
 
