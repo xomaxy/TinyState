@@ -446,20 +446,20 @@ function distanceToLine(C, [A, B]) {
 
             </span>
             {#if !enforceOnePoint}
-                <span>
-                {#if axisX != undefined}
-                <select class="select" bind:value={axis[0].id} on:change={()=>{updateRanges(); updateData();}} >
-                    {console.log("key", keys)}
-                    
-                    {#each keys as key}
-                    <option value={key} >{key+" ["+units[key.replace(/[0-9]/g, "")]+']'}</option>
-                    
-                    {/each}
-                    
-                </select>
-                {/if}   
-                </span>
-                <input type="text" name="" id="" placeholder="x-coordinate" class="input p-2 boder-1" bind:value={center.x }/>
+            <span>
+            {#if axisX != undefined}
+            <select class="select" bind:value={axis[0].id} on:change={()=>{updateRanges(); updateData();}} >
+                {console.log("key", keys)}
+                
+                {#each keys as key}
+                <option value={key} >{key+" ["+units[key.replace(/[0-9]/g, "")]+']'}</option>
+                
+                {/each}
+                
+            </select>
+            {/if}   
+            </span>
+            <input type="text" name="" id="" placeholder="x-coordinate" class="input p-2 boder-1" bind:value={center.x }/>
             {/if}
         </div>
         <div>
@@ -533,13 +533,13 @@ function distanceToLine(C, [A, B]) {
             <tbody>
                 <tr>
                     {#if !enforceOnePoint}
-                    <tr>
+                    
                         {#each values.x.slice(6,12) as value}
                         <th>
                             {showNumber(value.guess)}
                         </th>
                         {/each}
-                    </tr>
+                   
                     {/if}
                     
                 </tr>
