@@ -14,9 +14,11 @@
     export {data as data}
     export let center = {x:undefined, y:undefined}
 
+
+
     onMount(() => {
         select(svg).on("click",(e)=>{  
-            center = {x: $xScale.invert(pointer(e)[0]), y:  $yScale.invert(pointer(e)[1])}
+            center = {x: $xScale.invert(pointer(e)[0]).toFixed(3), y:  $yScale.invert(pointer(e)[1]).toFixed(3)}
             console.log(JSON.stringify(center))
         })
     })

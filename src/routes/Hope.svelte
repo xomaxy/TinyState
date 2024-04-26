@@ -1,6 +1,6 @@
 <script>
     import Graph from "./Graph.svelte";
-    import {csv, interval, scaleLinear, dsv} from "d3"
+    import {csv, interval, scaleLinear, dsv, text} from "d3"
     import { Slice } from "lucide-svelte";
     import { RangeSlider } from '@skeletonlabs/skeleton';
     import { TabGroup, Tab, TabAnchor } from '@skeletonlabs/skeleton';
@@ -53,6 +53,8 @@ function distanceToLine(C, [A, B]) {
 
     let selectQualityBy,thermoForQuality, midValue;
 
+    let enforceOnePoint = false
+
     // Variables for engine
 
     let center = {x: 0, y: 0}
@@ -70,7 +72,7 @@ function distanceToLine(C, [A, B]) {
         H: "kJ/kg",
         U: "kJ/kg",
         S: "kJ/kgK",
-        Ve: "m^3/kg",
+        Ve: "m^3/kg (10^3)",
         EH: "kJ/kg",
         EU: "kJ/kg",
         ES: "kJ/kgK",
@@ -326,7 +328,13 @@ function distanceToLine(C, [A, B]) {
 
             if (isIn(center.x, axisX.domain) && isIn(center.y, axisY.domain)){
 
-                isCloseToCurve = distance < 10
+                if(axis[0].id != 'T' || axis[0].id != 'P'){
+                    isCloseToCurve = true
+                    console.log("Close for everyone that is not T and P")
+                }else {
+                    isCloseToCurve = distance < 10
+
+                }
 
                 console.log("Is close?",isCloseToCurve)
 
@@ -336,7 +344,13 @@ function distanceToLine(C, [A, B]) {
 
 
 
-            } 
+
+            }else {
+                if(axis[0].id != 'T' || axis[0].id != 'P'){
+                    isCloseToCurve = true
+                    console.log("Close for everyone that is not T and P")
+                }
+            }
             /**
             if(!isCloseToCurve) {
 
@@ -424,26 +438,42 @@ function distanceToLine(C, [A, B]) {
         </span>
         <div>
             <span>
+
+                <label class="flex items-center space-x-2 mb-3">
+                    <input class="checkbox" type="checkbox" bind:checked={enforceOnePoint} />
+                    <p>Enforce One Point Interpolation</p>
+                </label>
+
+            </span>
+            {#if !enforceOnePoint}
+            <span>
             {#if axisX != undefined}
             <select class="select" bind:value={axis[0].id} on:change={()=>{updateRanges(); updateData();}} >
                 {console.log("key", keys)}
+                
                 {#each keys as key}
                 <option value={key} >{key+" ["+units[key.replace(/[0-9]/g, "")]+']'}</option>
+                
                 {/each}
+                
             </select>
             {/if}
                 
             </span>
+            
             <input type="text" name="" id="" placeholder="x-coordinate" class="input p-2 boder-1" bind:value={center.x }/>
+            {/if}
         </div>
         <div>
             <span>
                 {#if axisY != undefined}
+                
                 <select class="select" bind:value={axis[1].id} on:change={()=>{updateRanges(); updateData();}} >
                     {#each keys.slice(0,2) as key}
                     <option value={key} >{key+" ["+units[key.replace(/[0-9]/g, "")]+']'}</option>
                     {/each}
                 </select>
+                
                 {/if}
             </span>
         <input type="text" name="" id="" placeholder="y-coordinate" class="input p-2" bind:value={center.y }/>
@@ -456,12 +486,17 @@ function distanceToLine(C, [A, B]) {
                 <tr>
                     {#each values.x.slice(0,6) as value}
                         <th>
-                            {value.variable}
+                            {value.variable }
+                            <span class="text-xs">
+                                { " ["+units[value.variable.replace(/[0-9]/g, "")]+']'}
+                             </span>
                         </th>
                     {/each}
                 </tr>
             </thead>
+            <!-- UPPER INTERPOLATION  -->
             <tbody>
+                {#if enforceOnePoint}
                 <tr>
                     {#each values.x.slice(0,6) as value}
                         <th>
@@ -469,6 +504,9 @@ function distanceToLine(C, [A, B]) {
                         </th>
                     {/each}
                 </tr>
+                {/if}
+                
+               <!-- DOWN INTERPOLATION  -->
                 <tr>
                     {#each values.y.slice(0,6) as value}
                         <th>
@@ -485,18 +523,27 @@ function distanceToLine(C, [A, B]) {
                 <tr>
                     {#each values.x.slice(6,12) as value}
                     <th>
-                        {value.variable}
+                        {value.variable }
+                        <span class="text-xs">
+                           { " ["+units[value.variable.replace(/[0-9]/g, "")]+']'}
+                        </span>
                     </th>
                     {/each}
                 </tr>
             </thead>
+         
             <tbody>
                 <tr>
-                    {#each values.x.slice(6,12) as value}
-                    <th>
-                        {showNumber(value.guess)}
-                    </th>
-                    {/each}
+                    {#if enforceOnePoint}
+                    <tr>
+                        {#each values.x.slice(6,12) as value}
+                        <th>
+                            {showNumber(value.guess)}
+                        </th>
+                        {/each}
+                    </tr>
+                    {/if}
+                    
                 </tr>
                 <tr>
                     {#each values.y.slice(6,12) as value}
@@ -513,7 +560,7 @@ function distanceToLine(C, [A, B]) {
 
 
         <!--
-
+                QUALITY CALCULATION
         -->
 
         <TabGroup>
@@ -633,16 +680,24 @@ function distanceToLine(C, [A, B]) {
                 {:else if tabSet === 1}
                 <div class="flex flex-row gap-5">
                     <select   class="select basis-1/4" bind:value={thermoForQuality}>
-                        <option value="H" >Hx</option>
-                        <option value="U">Ux</option>
-                        <option value="Ve">Vx</option>
-                        <option value="S">Sx</option>
+                        <option value="H" >Hx {"["+units['H'] + "]"}</option>
+                        <option value="U">Ux {"["+units['U'] + "]"}</option>
+                        <option value="Ve">Vx {"["+units['Ve'] + "]"}</option>
+                        <option value="S">Sx {"["+units['S'] + "]"}</option>
                       </select>
                       <select  class="select basis-1/4" bind:value={selectQualityBy}>
 
-                        {#each axis as ax}
-                        <option value={ax.type} >By {ax.id}</option>
-                        {/each}
+
+                        {#if enforceOnePoint}
+                            
+                            <option value={axis[0].type} >By {axis[0].id}</option>
+                            
+                        {:else}
+                            {#each axis as ax}
+                            <option value={ax.type} >By {ax.id}</option>
+                            {/each}
+                        {/if}
+                        
                         
                         
                       </select>
